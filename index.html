@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -201,6 +202,26 @@ select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='htt
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--blue-hi);border-radius:2px}
+
+/* ── VALIDATION ── */
+.missing-banner{display:none;background:var(--red-lo);border:1.5px solid rgba(220,38,38,.25);border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:1.25rem}
+.missing-banner.show{display:block}
+.missing-banner-hdr{display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem}
+.missing-banner-ico{font-size:1.1rem}
+.missing-banner-title{font-family:var(--head);font-size:.9rem;font-weight:800;color:var(--red)}
+.missing-list{display:flex;flex-direction:column;gap:.45rem}
+.missing-item{display:flex;align-items:center;justify-content:space-between;padding:.55rem .85rem;background:#fff;border:1px solid rgba(220,38,38,.18);border-radius:8px;gap:1rem}
+.missing-item-left{display:flex;align-items:center;gap:.6rem;flex:1}
+.missing-dot{width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0}
+.missing-label{font-size:.82rem;color:var(--t2);font-weight:500}
+.missing-fix{font-size:.75rem;font-weight:700;color:var(--blue);background:var(--blue-lo);border:1px solid var(--blue-bd);padding:.2rem .65rem;border-radius:20px;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.missing-fix:hover{background:var(--blue);color:#fff}
+.all-good{display:none;background:var(--green-lo);border:1.5px solid var(--green-bd);border-radius:var(--r);padding:.85rem 1.1rem;margin-bottom:1.25rem;align-items:center;gap:.65rem}
+.all-good.show{display:flex}
+.all-good-txt{font-size:.875rem;font-weight:600;color:var(--green)}
+
+input.field-error,select.field-error,textarea.field-error{border-color:var(--red)!important;background:var(--red-lo)!important}
+.cb-error{outline:2px solid var(--red);outline-offset:3px;border-radius:var(--r)}
 </style>
 </head>
 <body>
@@ -1013,6 +1034,19 @@ select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='htt
         </div>
       </div>
       <div class="step-body">
+        <!-- Missing fields banner -->
+        <div class="missing-banner" id="missingBanner">
+          <div class="missing-banner-hdr">
+            <span class="missing-banner-ico">⚠️</span>
+            <span class="missing-banner-title" id="missingCount">items need your attention before submitting</span>
+          </div>
+          <div class="missing-list" id="missingList"></div>
+        </div>
+        <!-- All good banner -->
+        <div class="all-good" id="allGoodBanner">
+          <span style="font-size:1.2rem">✅</span>
+          <span class="all-good-txt">Everything looks good — you're ready to submit!</span>
+        </div>
         <div id="reviewContent"></div>
         <div class="confirm-wrap" id="confirmWrap" onclick="toggleConfirm()">
           <div class="confirm-box" id="confirmBox"></div>
@@ -1097,6 +1131,7 @@ let confirmed = false;
   });
 
   checkConditionals();
+  watchFields();
 })();
 
 function checkConditionals(){
@@ -1162,8 +1197,126 @@ function selectOpt(el, fieldId, value){
 
 // ── HELPERS ────────────────────────────────────────────────────────────────
 function val(id){ const el = document.getElementById(id); return el ? el.value.trim() : ''; }
-function cbs(name){ return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(c=>c.value).join(', ') || '—'; }
+function cbs(name){ return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(c=>c.value).join(', ') || ''; }
+function cbsDisplay(name){ return cbs(name) || '—'; }
 function isSkipped(section){ const cb = document.getElementById(`skip_${section}`); return cb && cb.checked; }
+
+// ── REQUIRED FIELD DEFINITIONS ─────────────────────────────────────────────
+// Each: { label, check: fn→bool, step, fix: fn (optional — jumps to step) }
+function getRequiredFields(){
+  const reqs = [
+    // Step 1 — always required
+    { label:'Business Legal Name',        step:1, check:()=>!!val('biz_name') },
+    { label:'Owner / Primary Contact',    step:1, check:()=>!!val('owner_name') },
+    { label:'Business Phone Number',      step:1, check:()=>!!val('biz_phone') },
+    { label:'Business Email Address',     step:1, check:()=>!!val('biz_email') },
+    { label:'City, State',                step:1, check:()=>!!val('city_state') },
+    { label:'Time Zone',                  step:1, check:()=>!!val('timezone') },
+    { label:'Blackout Hours',             step:1, check:()=>!!cbs('blackout') },
+  ];
+
+  // Step 2 — Lead (if not skipped)
+  if(!isSkipped('lead')){
+    reqs.push(
+      { label:'Lead Sources',             step:2, check:()=>!!cbs('lead_src') },
+      { label:'Response Speed',           step:2, check:()=>!!val('resp_timing') },
+      { label:'Response Channel',         step:2, check:()=>!!val('resp_channel') },
+    );
+  }
+  // Step 3 — Appointments (if not skipped)
+  if(!isSkipped('appt')){
+    reqs.push(
+      { label:'Scheduling Software',      step:3, check:()=>!!val('sched_sw') },
+      { label:'Confirmation Timing',      step:3, check:()=>!!val('confirm_timing') },
+      { label:'Reminder Timing',          step:3, check:()=>!!val('remind_timing') },
+    );
+  }
+  // Step 4 — Reviews (if not skipped)
+  if(!isSkipped('review')){
+    reqs.push(
+      { label:'Google Review Link',       step:4, check:()=>!!val('review_link') },
+      { label:'Review Send Timing',       step:4, check:()=>!!val('review_timing') },
+      { label:'Review Send Channel',      step:4, check:()=>!!val('review_channel') },
+      { label:'Review Trigger',           step:4, check:()=>!!val('review_trigger') },
+    );
+  }
+  // Step 5 — Invoices (if not skipped)
+  if(!isSkipped('invoice')){
+    reqs.push(
+      { label:'Invoicing Software',       step:5, check:()=>!!val('invoice_sw') },
+      { label:'Invoice Trigger',          step:5, check:()=>!!val('invoice_trigger') },
+    );
+  }
+  // Step 6 — Quotes (if not skipped)
+  if(!isSkipped('quote')){
+    reqs.push(
+      { label:'Quote Software',           step:6, check:()=>!!val('quote_sw') },
+      { label:'Quote Follow-up Timing',   step:6, check:()=>!!val('quote_timing') },
+    );
+  }
+  // Step 7 — Re-engagement (if not skipped)
+  if(!isSkipped('reengage')){
+    reqs.push(
+      { label:'Lapsed Client Window',     step:7, check:()=>!!val('lapsed_window') },
+    );
+  }
+  // Step 9 — Messaging (always required)
+  reqs.push(
+    { label:'Message Tone',               step:9, check:()=>!!val('msg_tone') },
+    { label:'Business Name in Messages',  step:9, check:()=>!!val('msg_biz_name') },
+    { label:'Sign-off Name',              step:9, check:()=>!!val('msg_signoff') },
+    { label:'SMS Opt-out Preference',     step:9, check:()=>!!cbs('optout') },
+  );
+
+  return reqs;
+}
+
+// ── VALIDATION ─────────────────────────────────────────────────────────────
+function runValidation(){
+  const fields = getRequiredFields();
+  const missing = fields.filter(f => !f.check());
+
+  const banner   = document.getElementById('missingBanner');
+  const allGood  = document.getElementById('allGoodBanner');
+  const list     = document.getElementById('missingList');
+  const countEl  = document.getElementById('missingCount');
+  const submitBtn= document.getElementById('submitBtn');
+
+  if(!banner) return;
+
+  if(missing.length === 0){
+    banner.classList.remove('show');
+    allGood.classList.add('show');
+    submitBtn.disabled = !confirmed;
+  } else {
+    banner.classList.add('show');
+    allGood.classList.remove('show');
+    submitBtn.disabled = true;
+
+    const n = missing.length;
+    countEl.textContent = `${n} item${n!==1?'s':''} need${n===1?'s':''} your attention before submitting`;
+
+    // Step labels for readable names
+    const stepNames = {1:'Business Info',2:'Lead Follow-Up',3:'Appointment Reminders',4:'Google Reviews',5:'Invoice Automation',6:'Quote Follow-Up',7:'Re-Engagement',8:'Client Onboarding',9:'Messaging Preferences'};
+
+    list.innerHTML = missing.map(f => `
+      <div class="missing-item">
+        <div class="missing-item-left">
+          <div class="missing-dot"></div>
+          <span class="missing-label"><strong>${f.label}</strong> <span style="color:var(--t4);font-weight:400">— Step ${f.step}: ${stepNames[f.step]||''}</span></span>
+        </div>
+        <button class="missing-fix" onclick="goTo(${f.step})">Go fix it →</button>
+      </div>`).join('');
+  }
+}
+
+// Watch all inputs/selects/checkboxes to re-run validation live
+function watchFields(){
+  document.querySelectorAll('input,select,textarea').forEach(el => {
+    el.addEventListener('change', () => { if(currentStep === TOTAL_STEPS) runValidation(); });
+    el.addEventListener('input',  () => { if(currentStep === TOTAL_STEPS) runValidation(); });
+  });
+}
 
 // ── REVIEW BUILD ───────────────────────────────────────────────────────────
 function buildReview(){
@@ -1176,12 +1329,12 @@ function buildReview(){
       ['City, State', val('city_state')],
       ['Time Zone', val('timezone')],
       ['Address', val('biz_address') || '—'],
-      ['Blackout Hours', cbs('blackout')],
+      ['Blackout Hours', cbsDisplay('blackout')],
     ], step:1},
     { title:'01 · Lead Capture & Follow-Up', items: isSkipped('lead') ? [['Status','Skipped — not in plan']] : [
-      ['Lead Sources', cbs('lead_src')],
+      ['Lead Sources', cbsDisplay('lead_src')],
       ['Form URL', val('form_url') || '—'],
-      ['Form Collects', cbs('form_fields')],
+      ['Form Collects', cbsDisplay('form_fields')],
       ['Response Speed', val('resp_timing')],
       ['Response Channel', val('resp_channel')],
       ['Initial Message', val('initial_msg') || '—'],
@@ -1229,7 +1382,7 @@ function buildReview(){
       ['Seasonal Detail', val('seasonal_detail') || '—'],
     ], step:7},
     { title:'07 · Client Onboarding', items: isSkipped('onboard') ? [['Status','Skipped — not in plan']] : [
-      ['Onboarding Requirements', cbs('onboard_req')],
+      ['Onboarding Requirements', cbsDisplay('onboard_req')],
       ['Intake Form URL', val('intake_url') || '—'],
       ['Welcome Message', val('onboard_msg') || '—'],
     ], step:8},
@@ -1237,8 +1390,8 @@ function buildReview(){
       ['Message Tone', val('msg_tone') || '—'],
       ['Business Name in Messages', val('msg_biz_name')],
       ['Sign-off Name', val('msg_signoff')],
-      ['SMS Opt-out', cbs('optout')],
-      ['Tools Confirmed', cbs('tools_confirm')],
+      ['SMS Opt-out', cbsDisplay('optout')],
+      ['Tools Confirmed', cbsDisplay('tools_confirm')],
       ['Other Tools', val('other_tools') || '—'],
       ['Additional Notes', val('other_notes') || '—'],
     ], step:9},
@@ -1260,13 +1413,15 @@ function buildReview(){
     </div>`).join('');
 
   document.getElementById('reviewContent').innerHTML = html;
+  runValidation();
 }
 
 // ── CONFIRM ────────────────────────────────────────────────────────────────
 function toggleConfirm(){
   confirmed = !confirmed;
   document.getElementById('confirmWrap').classList.toggle('checked', confirmed);
-  document.getElementById('submitBtn').disabled = !confirmed;
+  const missing = getRequiredFields().filter(f => !f.check());
+  document.getElementById('submitBtn').disabled = !confirmed || missing.length > 0;
 }
 
 // ── SUBMIT ─────────────────────────────────────────────────────────────────
