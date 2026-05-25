@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calvren Automation — Build Intake Form</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+
+:root{
+  --navy:#0f1c3f;--navy2:#1a2d5a;--navy3:#243870;
+  --blue:#2563eb;--blue-hi:#3b82f6;--blue-lo:rgba(37,99,235,.07);--blue-bd:rgba(37,99,235,.2);
+  --cyan:#0891b2;--green:#059669;--green-lo:rgba(5,150,105,.08);--green-bd:rgba(5,150,105,.25);
+  --amber:#d97706;--amber-lo:rgba(217,119,6,.08);--amber-bd:rgba(217,119,6,.25);
+  --red:#dc2626;--red-lo:rgba(220,38,38,.07);
+  --bg:#f1f4f9;--bg2:#fff;--bg3:#f8fafc;
+  --bdr:#e5e7eb;--bdr2:#d1d5db;
+  --t1:#0f1c3f;--t2:#374151;--t3:#6b7280;--t4:#9ca3af;
+  --mono:'Share Tech Mono',monospace;
+  --head:'Syne',sans-serif;
+  --body:'DM Sans',sans-serif;
+  --r:10px;--r2:16px;
+  --shadow:0 4px 24px rgba(15,28,63,.08);
+  --shadow-lg:0 16px 48px rgba(15,28,63,.12);
+}
+
+body{background:var(--bg);font-family:var(--body);color:var(--t2);min-height:100vh;padding:0 0 4rem}
+
+/* ── HEADER ── */
+.site-header{background:var(--navy);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,.2)}
+.logo{display:flex;align-items:center;gap:.65rem;text-decoration:none}
+.logo-text{display:flex;flex-direction:column;gap:1px}
+.logo-main{font-family:var(--head);font-size:.9rem;font-weight:800;color:#fff;letter-spacing:.06em}
+.logo-sub{font-family:var(--mono);font-size:.3rem;letter-spacing:.2em;color:var(--blue-hi);opacity:.8}
+.header-badge{font-family:var(--body);font-size:.72rem;font-weight:600;color:var(--amber);background:var(--amber-lo);border:1px solid var(--amber-bd);padding:.25rem .75rem;border-radius:20px}
+
+/* ── NOTICE BANNER ── */
+.notice{background:linear-gradient(135deg,var(--amber-lo),rgba(217,119,6,.04));border-bottom:2px solid var(--amber-bd);padding:.85rem 2rem;display:flex;align-items:center;gap:.85rem;flex-wrap:wrap}
+.notice-ico{font-size:1.1rem;flex-shrink:0}
+.notice-txt{font-size:.82rem;color:var(--t2);line-height:1.65;flex:1}
+.notice-txt strong{color:var(--amber);font-weight:700}
+
+/* ── WIZARD CONTAINER ── */
+.wizard{max-width:720px;margin:2rem auto;padding:0 1.25rem}
+
+/* ── PROGRESS BAR ── */
+.progress-wrap{margin-bottom:2rem}
+.progress-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.65rem}
+.progress-label{font-family:var(--head);font-size:.78rem;font-weight:700;color:var(--navy);letter-spacing:.04em;text-transform:uppercase}
+.progress-counter{font-family:var(--mono);font-size:.7rem;color:var(--t4)}
+.progress-track{height:5px;background:var(--bdr);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:3px;transition:width .4s ease}
+.step-dots{display:flex;gap:.45rem;margin-top:.75rem;flex-wrap:wrap}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--bdr);transition:all .3s;cursor:pointer}
+.step-dot.active{background:var(--blue);transform:scale(1.3)}
+.step-dot.done{background:var(--green)}
+
+/* ── STEP CARD ── */
+.step{display:none;animation:fadeIn .35s ease}
+.step.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.step-card{background:#fff;border:1.5px solid var(--bdr);border-radius:var(--r2);overflow:hidden;box-shadow:var(--shadow)}
+
+/* Step header */
+.step-hdr{padding:1.5rem 1.75rem;background:var(--navy);display:flex;align-items:flex-start;gap:1rem}
+.step-num{width:40px;height:40px;border-radius:50%;background:var(--cyan);display:flex;align-items:center;justify-content:center;font-family:var(--head);font-size:.8rem;font-weight:800;color:#fff;flex-shrink:0}
+.step-hdr-text{flex:1}
+.step-title{font-family:var(--head);font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:.25rem}
+.step-desc{font-size:.8rem;color:rgba(255,255,255,.58);line-height:1.65}
+.skip-badge{font-size:.68rem;font-weight:700;color:rgba(255,255,255,.5);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:.2rem .65rem;border-radius:20px;white-space:nowrap;margin-top:.5rem;display:inline-block}
+
+/* Step body */
+.step-body{padding:1.75rem}
+
+/* ── FORM ELEMENTS ── */
+.field-group{margin-bottom:1.25rem}
+.field-label{font-family:var(--body);font-size:.82rem;font-weight:600;color:var(--navy);margin-bottom:.35rem;display:block}
+.field-hint{font-size:.74rem;color:var(--t4);font-style:italic;margin-bottom:.45rem;display:block;line-height:1.5}
+.field-req{color:var(--blue);font-size:.75rem;font-weight:700;margin-left:.3rem}
+
+input[type=text],input[type=email],input[type=tel],input[type=url],
+textarea,select{
+  width:100%;background:var(--bg3);border:1.5px solid var(--bdr2);
+  border-radius:var(--r);padding:.65rem .9rem;
+  font-family:var(--body);font-size:.875rem;color:var(--t1);
+  transition:all .2s;outline:none;-webkit-appearance:none;
+}
+input[type=text]:focus,input[type=email]:focus,input[type=tel]:focus,
+input[type=url]:focus,textarea:focus,select:focus{
+  border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+input::placeholder,textarea::placeholder{color:var(--t4);font-style:italic;font-size:.82rem}
+textarea{min-height:90px;resize:vertical;line-height:1.65}
+select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239ca3af' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .9rem center;padding-right:2.5rem}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:560px){.two-col{grid-template-columns:1fr}}
+
+/* Checkboxes */
+.cb-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+@media(max-width:480px){.cb-grid{grid-template-columns:1fr}}
+.cb-grid.cols-1{grid-template-columns:1fr}
+.cb-grid.cols-3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:560px){.cb-grid.cols-3{grid-template-columns:1fr 1fr}}
+
+.cb-item{display:flex;align-items:center;gap:.6rem;padding:.55rem .75rem;background:var(--bg3);border:1.5px solid var(--bdr);border-radius:var(--r);cursor:pointer;transition:all .2s;user-select:none}
+.cb-item:hover{border-color:var(--blue-bd);background:var(--blue-lo)}
+.cb-item.checked{background:var(--blue-lo);border-color:var(--blue-bd)}
+.cb-item input{position:absolute;opacity:0;width:0;height:0}
+.cb-box{width:18px;height:18px;border-radius:5px;border:2px solid var(--bdr2);background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.cb-item.checked .cb-box{background:var(--blue);border-color:var(--blue)}
+.cb-item.checked .cb-box::after{content:'✓';color:#fff;font-size:.72rem;font-weight:700}
+.cb-label{font-size:.82rem;color:var(--t2);line-height:1.4;flex:1}
+.cb-item.checked .cb-label{color:var(--navy);font-weight:500}
+
+/* Radio-style option cards */
+.opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}
+@media(max-width:480px){.opt-grid{grid-template-columns:1fr}}
+.opt-card{padding:.85rem 1rem;background:var(--bg3);border:1.5px solid var(--bdr);border-radius:var(--r);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:.75rem;user-select:none}
+.opt-card:hover{border-color:var(--blue-bd)}
+.opt-card.selected{background:var(--blue-lo);border-color:var(--blue)}
+.opt-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--bdr2);background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.opt-card.selected .opt-radio{border-color:var(--blue)}
+.opt-card.selected .opt-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.opt-label{font-size:.84rem;color:var(--t2);line-height:1.4}
+.opt-card.selected .opt-label{color:var(--navy);font-weight:600}
+
+/* Skip section toggle */
+.skip-section{display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;background:var(--amber-lo);border:1.5px solid var(--amber-bd);border-radius:var(--r);margin-bottom:1.25rem}
+.skip-toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.skip-toggle input{opacity:0;width:0;height:0}
+.skip-slider{position:absolute;inset:0;background:var(--bdr2);border-radius:11px;cursor:pointer;transition:.3s}
+.skip-slider::before{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.skip-toggle input:checked + .skip-slider{background:var(--green)}
+.skip-toggle input:checked + .skip-slider::before{transform:translateX(18px)}
+.skip-txt{font-size:.82rem;color:var(--t2);flex:1}
+.skip-txt strong{color:var(--amber);font-weight:700}
+.skipped-overlay{display:none;text-align:center;padding:2rem;color:var(--t4);font-style:italic;font-size:.875rem}
+.section-fields.hidden{display:none}
+
+/* Callout */
+.callout{display:flex;gap:.75rem;padding:.9rem 1.1rem;border-radius:var(--r);margin-bottom:1.25rem;border-left:3px solid}
+.callout.info{background:var(--blue-lo);border-color:var(--blue)}
+.callout.warn{background:var(--amber-lo);border-color:var(--amber)}
+.callout.tip{background:var(--green-lo);border-color:var(--green)}
+.callout-ico{font-size:1rem;flex-shrink:0;margin-top:.1rem}
+.callout-body{font-size:.8rem;color:var(--t2);line-height:1.72}
+.callout-body strong{font-weight:600;color:var(--navy)}
+
+/* Conditional field */
+.conditional{display:none;margin-top:.65rem;padding:.85rem;background:var(--bg3);border:1.5px dashed var(--bdr);border-radius:var(--r)}
+.conditional.show{display:block}
+
+/* ── NAV BUTTONS ── */
+.step-nav{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.75rem;border-top:1px solid var(--bdr);background:var(--bg3)}
+.btn{display:inline-flex;align-items:center;gap:.45rem;font-family:var(--body);font-size:.875rem;font-weight:600;padding:.65rem 1.5rem;border-radius:var(--r);border:1.5px solid transparent;cursor:pointer;transition:all .2s;text-decoration:none}
+.btn-pri{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-pri:hover{background:var(--navy);border-color:var(--navy);transform:translateY(-1px);box-shadow:0 6px 20px rgba(15,28,63,.2)}
+.btn-sec{background:#fff;color:var(--t2);border-color:var(--bdr2)}
+.btn-sec:hover{border-color:var(--blue);color:var(--blue)}
+.btn-submit{background:var(--green);color:#fff;border-color:var(--green);font-size:.95rem;padding:.8rem 2rem}
+.btn-submit:hover{background:#047857;border-color:#047857;transform:translateY(-1px);box-shadow:0 6px 20px rgba(5,150,105,.25)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+
+/* ── STEP COUNTER PILL ── */
+.step-pill{font-family:var(--mono);font-size:.72rem;color:var(--t4)}
+
+/* ── REVIEW PAGE ── */
+.review-section{margin-bottom:1.25rem;border:1.5px solid var(--bdr);border-radius:var(--r2);overflow:hidden}
+.review-sec-hdr{background:var(--navy);padding:.75rem 1.1rem;display:flex;align-items:center;justify-content:space-between}
+.review-sec-title{font-family:var(--head);font-size:.82rem;font-weight:700;color:#fff}
+.review-edit{font-size:.72rem;color:rgba(255,255,255,.55);cursor:pointer;background:rgba(255,255,255,.1);border:none;padding:.2rem .6rem;border-radius:20px;font-family:var(--body);transition:all .2s}
+.review-edit:hover{color:#fff;background:rgba(255,255,255,.2)}
+.review-items{padding:.85rem 1.1rem;display:flex;flex-direction:column;gap:.5rem}
+.review-item{display:flex;gap:1rem;font-size:.82rem;padding:.5rem .65rem;background:var(--bg3);border-radius:8px}
+.review-key{font-weight:600;color:var(--navy);min-width:140px;flex-shrink:0}
+.review-val{color:var(--t2);flex:1;word-break:break-word}
+.review-empty{color:var(--t4);font-style:italic}
+
+/* Confirm checkbox */
+.confirm-wrap{background:var(--green-lo);border:1.5px solid var(--green-bd);border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:.85rem;cursor:pointer}
+.confirm-box{width:22px;height:22px;border:2px solid var(--green-bd);border-radius:6px;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.confirm-wrap.checked .confirm-box{background:var(--green);border-color:var(--green)}
+.confirm-wrap.checked .confirm-box::after{content:'✓';color:#fff;font-size:.85rem;font-weight:700}
+.confirm-txt{font-size:.84rem;color:var(--t2);line-height:1.65}
+.confirm-txt strong{color:var(--navy);font-weight:600}
+
+/* ── SUCCESS PAGE ── */
+.success{text-align:center;padding:3rem 2rem;display:none}
+.success.show{display:block}
+.success-ico{font-size:3rem;margin-bottom:1rem}
+.success h2{font-family:var(--head);font-size:1.6rem;font-weight:800;color:var(--navy);margin-bottom:.65rem}
+.success p{font-size:.9rem;color:var(--t3);line-height:1.8;max-width:420px;margin:0 auto 1.5rem}
+
+/* ── FOOTER ── */
+.site-footer{text-align:center;padding:1.5rem;font-size:.75rem;color:var(--t4);margin-top:1.5rem}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--blue-hi);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <a href="#" class="logo">
+    <svg width="26" height="28" viewBox="0 0 85 90" fill="none">
+      <polygon points="16,56 42,64 68,56 42,48" fill="rgba(37,99,235,.25)" stroke="rgba(37,99,235,.4)" stroke-width="1"/>
+      <polygon points="16,45 16,56 42,64 42,53" fill="rgba(37,99,235,.35)" stroke="rgba(37,99,235,.45)" stroke-width="1"/>
+      <polygon points="68,45 68,56 42,64 42,53" fill="rgba(15,28,63,.2)" stroke="rgba(37,99,235,.25)" stroke-width=".7"/>
+      <polygon points="24,36 42,44 60,36 42,28" fill="rgba(8,145,178,.5)" stroke="#0891b2" stroke-width="1"/>
+      <polygon points="24,25 24,36 42,44 42,33" fill="rgba(8,145,178,.65)" stroke="#0891b2" stroke-width="1"/>
+      <polygon points="60,25 60,36 42,44 42,33" fill="rgba(15,28,63,.22)" stroke="rgba(37,99,235,.3)" stroke-width=".7"/>
+      <polygon points="32,16 42,22 52,16 42,10" fill="rgba(8,145,178,.85)" stroke="#0891b2" stroke-width="1"/>
+      <circle cx="42" cy="8" r="2" fill="#0891b2"/>
+    </svg>
+    <div class="logo-text">
+      <span class="logo-main">CALVREN</span>
+      <span class="logo-sub">AUTOMATION</span>
+    </div>
+  </a>
+  <span class="header-badge">⏱ Return within 5 business days</span>
+</header>
+
+<!-- NOTICE -->
+<div class="notice">
+  <span class="notice-ico">⚠️</span>
+  <div class="notice-txt">
+    <strong>Action Required.</strong> Your automation build cannot begin until this form is complete and returned. Delays push back your go-live date. Questions? Email <strong>hello@calvren.co</strong> before your deadline.
+  </div>
+</div>
+
+<!-- WIZARD -->
+<div class="wizard">
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap">
+    <div class="progress-top">
+      <span class="progress-label">Build Intake Form</span>
+      <span class="progress-counter" id="progCounter">Step 1 of 10</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progFill" style="width:10%"></div></div>
+    <div class="step-dots" id="stepDots"></div>
+  </div>
+
+  <!-- STEP 1: Business Info -->
+  <div class="step active" id="step-1">
+    <div class="step-card">
+      <div class="step-hdr">
+        <div class="step-num">00</div>
+        <div class="step-hdr-text">
+          <div class="step-title">Your Business Information</div>
+          <div class="step-desc">Basic details that appear in all automated messages. Required for every client.</div>
+        </div>
+      </div>
+      <div class="step-body">
+        <div class="two-col">
+          <div class="field-group">
+            <label class="field-label">Business Legal Name <span class="field-req">*</span></label>
+            <span class="field-hint">As it should appear in all automated messages to clients</span>
+            <input type="text" id="biz_name" placeholder="e.g. Riverside HVAC LLC">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Owner / Primary Contact <span class="field-req">*</span></label>
+            <span class="field-hint">Full name of the person completing this form</span>
+            <input type="text" id="owner_name" placeholder="Full name">
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="field-group">
+            <label class="field-label">Business Phone Number <span class="field-req">*</span></label>
+            <span class="field-hint">Number clients will see on automated texts</span>
+            <input type="tel" id="biz_phone" placeholder="(xxx) xxx-xxxx">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Business Email Address <span class="field-req">*</span></label>
+            <span class="field-hint">Reply-to address for automated emails</span>
+            <input type="email" id="biz_email" placeholder="owner@yourbusiness.com">
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="field-group">
+            <label class="field-label">City, State <span class="field-req">*</span></label>
+            <input type="text" id="city_state" placeholder="e.g. St. Louis, MO">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Time Zone <span class="field-req">*</span></label>
+            <select id="timezone">
+              <option value="">Select your time zone…</option>
+              <option>Eastern Time (ET)</option>
+              <option>Central Time (CT)</option>
+              <option>Mountain Time (MT)</option>
+              <option>Pacific Time (PT)</option>
+              <option>Alaska Time (AKT)</option>
+              <option>Hawaii Time (HT)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Business Address</label>
+          <span class="field-hint">Used in appointment confirmations if applicable</span>
+          <input type="text" id="biz_address" placeholder="Street address, city, state, zip">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Blackout Hours <span class="field-req">*</span></label>
+          <span class="field-hint">We will NOT send automated messages during these times</span>
+          <div class="cb-grid cols-1">
+            <label class="cb-item"><input type="checkbox" name="blackout" value="No blackout hours — send any time"><div class="cb-box"></div><span class="cb-label">No blackout hours — send any time</span></label>
+            <label class="cb-item"><input type="checkbox" name="blackout" value="No texts after 8:00 PM local time"><div class="cb-box"></div><span class="cb-label">No texts after 8:00 PM local time (recommended)</span></label>
+            <label class="cb-item"><input type="checkbox" name="blackout" value="No texts before 8:00 AM local time"><div class="cb-box"></div><span class="cb-label">No texts before 8:00 AM local time</span></label>
+            <label class="cb-item"><input type="checkbox" name="blackout" value="No automated messages on weekends"><div class="cb-box"></div><span class="cb-label">No automated messages on weekends</span></label>
+            <label class="cb-item" id="blackout_custom_cb"><input type="checkbox" name="blackout" value="Custom hours"><div class="cb-box"></div><span class="cb-label">Custom hours — I'll specify below</span></label>
+          </div>
+          <div class="conditional" id="blackout_custom_field">
+            <label class="field-label">Specify custom blackout hours</label>
+            <input type="text" id="blackout_custom" placeholder="e.g. No texts after 7 PM or before 9 AM on weekdays">
+          </div>
+        </div>
+      </div>
+      <div class="step-nav">
+        <span class="step-pill">Step 1 of 10</span>
+        <button class="btn btn-pri" onclick="goTo(2)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Lead Follow-Up -->
+  <div class="step" id="step-2">
+    <div class="step-card">
+      <div class="step-hdr">
+        <div class="step-num">01</div>
+        <div class="step-hdr-text">
+          <div class="step-title">Lead Capture & Follow-Up</div>
+          <div class="step-desc">Automated response the moment a new lead contacts your business.</div>
+          <span class="skip-badge">Skip if this automation is not in your plan</span>
+        </div>
+      </div>
+      <div class="step-body">
+        <div class="skip-section">
+          <label class="skip-toggle"><input type="checkbox" id="skip_lead" onchange="toggleSkip('lead')"><span class="skip-slider"></span></label>
+          <span class="skip-txt"><strong>Skip this section</strong> — Lead Follow-Up is not in my automation plan</span>
+        </div>
+        <div class="section-fields" id="fields_lead">
+          <div class="callout info"><span class="callout-ico">💡</span><div class="callout-body">This automation fires within seconds of a new lead contacting you. We need to know exactly where leads come from and what to say to them automatically.</div></div>
+          <div class="field-group">
+            <label class="field-label">Where do your leads come from? <span class="field-req">*</span></label>
+            <span class="field-hint">Check all that apply</span>
+            <div class="cb-grid">
+              <label class="cb-item"><input type="checkbox" name="lead_src" value="Website contact form"><div class="cb-box"></div><span class="cb-label">Website contact form</span></label>
+              <label class="cb-item"><input type="checkbox" name="lead_src" value="Google Business Profile"><div class="cb-box"></div><span class="cb-label">Google Business Profile</span></label>
+              <label class="cb-item"><input type="checkbox" name="lead_src" value="Facebook / Instagram"><div class="cb-box"></div><span class="cb-label">Facebook / Instagram</span></label>
+              <label class="cb-item"><input type="checkbox" name="lead_src" value="Phone call (inbound)"><div class="cb-box"></div><span class="cb-label">Phone call (inbound)</span></label>
+              <label class="cb-item"><input type="checkbox" name="lead_src" value="Google Local Services Ads"><div class="cb-box"></div><span class="cb-label">Google Local Services Ads</span></label>
+              <label class="cb-item"><input type="checkbox" name="lead_src" value="Yelp / Angi / HomeAdvisor"><div class="cb-box"></div><span class="cb-label">Yelp / Angi / HomeAdvisor</span></label>
+              <label class="cb-item"><input type="checkbox" name="lead_src" value="Referral / word of mouth"><div class="cb-box"></div><span class="cb-label">Referral / word of mouth</span></label>
+              <label class="cb-item" id="lead_other_cb"><input type="checkbox" name="lead_src" value="Other"><div class="cb-box"></div><span class="cb-label">Other — specify below</span></label>
+            </div>
+            <div class="conditional" id="lead_other_field">
+              <input type="text" id="lead_src_other" placeholder="Specify other lead source">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Website Contact Form URL</label>
+            <span class="field-hint">Paste the full URL where your contact form lives</span>
+            <input type="url" id="form_url" placeholder="https://yourbusiness.com/contact">
+          </div>
+          <div class="field-group">
+            <label class="field-label">What does your contact form collect?</label>
+            <span class="field-hint">Check all fields your form includes</span>
+            <div class="cb-grid cols-3">
+              <label class="cb-item"><input type="checkbox" name="form_fields" value="First name"><div class="cb-box"></div><span class="cb-label">First name</span></label>
+              <label class="cb-item"><input type="checkbox" name="form_fields" value="Last name"><div class="cb-box"></div><span class="cb-label">Last name</span></label>
+              <label class="cb-item"><input type="checkbox" name="form_fields" value="Email address"><div class="cb-box"></div><span class="cb-label">Email</span></label>
+              <label class="cb-item"><input type="checkbox" name="form_fields" value="Phone number"><div class="cb-box"></div><span class="cb-label">Phone number</span></label>
+              <label class="cb-item"><input type="checkbox" name="form_fields" value="Service requested"><div class="cb-box"></div><span class="cb-label">Service type</span></label>
+              <label class="cb-item"><input type="checkbox" name="form_fields" value="Message / notes"><div class="cb-box"></div><span class="cb-label">Message</span></label>
+              <label class="cb-item"><input type="checkbox" name="form_fields" value="Preferred appointment time"><div class="cb-box"></div><span class="cb-label">Preferred time</span></label>
+              <label class="cb-item"><input type="checkbox" name="form_fields" value="Address / location"><div class="cb-box"></div><span class="cb-label">Address</span></label>
+            </div>
+          </div>
+          <div class="two-col">
+            <div class="field-group">
+              <label class="field-label">How fast should first response send? <span class="field-req">*</span></label>
+              <select id="resp_timing">
+                <option value="">Select timing…</option>
+                <option>Immediately (within 60 seconds)</option>
+                <option>Within 5 minutes</option>
+                <option>Within 15 minutes</option>
+                <option>Within 1 hour</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Send initial response via <span class="field-req">*</span></label>
+              <select id="resp_channel">
+                <option value="">Select channel…</option>
+                <option>Text message (SMS) only</option>
+                <option>Email only</option>
+                <option>Both text and email</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">What should the initial response message say?</label>
+            <span class="field-hint">Write the exact message or describe the key points — we'll draft it if you prefer (note that below)</span>
+            <textarea id="initial_msg" placeholder="e.g. Hi [Name], thanks for reaching out to Riverside HVAC! We received your request and will be in touch within the hour. In the meantime, call us at (314) 555-0100 if urgent.&#10;&#10;— or — &#10;&#10;Please draft for us based on our business info."></textarea>
+          </div>
+          <div class="two-col">
+            <div class="field-group">
+              <label class="field-label">Follow-up attempts if no response</label>
+              <select id="followup_count">
+                <option value="">Select…</option>
+                <option>1 follow-up attempt</option>
+                <option>2 follow-up attempts</option>
+                <option>3 follow-up attempts</option>
+                <option>No follow-up — initial message only</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Stop follow-up sequence when</label>
+              <select id="followup_stop">
+                <option value="">Select…</option>
+                <option>Lead replies to any message</option>
+                <option>Lead books an appointment</option>
+                <option>After all attempts are exhausted</option>
+                <option>After 3 days with no response</option>
+                <option>After 7 days with no response</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-sec" onclick="goTo(1)">← Back</button>
+        <span class="step-pill">Step 2 of 10</span>
+        <button class="btn btn-pri" onclick="goTo(3)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: Appointment Reminders -->
+  <div class="step" id="step-3">
+    <div class="step-card">
+      <div class="step-hdr">
+        <div class="step-num">02</div>
+        <div class="step-hdr-text">
+          <div class="step-title">Appointment Reminders</div>
+          <div class="step-desc">Automated confirmations and reminders to reduce no-shows.</div>
+          <span class="skip-badge">Skip if this automation is not in your plan</span>
+        </div>
+      </div>
+      <div class="step-body">
+        <div class="skip-section">
+          <label class="skip-toggle"><input type="checkbox" id="skip_appt" onchange="toggleSkip('appt')"><span class="skip-slider"></span></label>
+          <span class="skip-txt"><strong>Skip this section</strong> — Appointment Reminders are not in my plan</span>
+        </div>
+        <div class="section-fields" id="fields_appt">
+          <div class="field-group">
+            <label class="field-label">What scheduling software do you use? <span class="field-req">*</span></label>
+            <select id="sched_sw">
+              <option value="">Select your scheduling software…</option>
+              <option>Jobber</option><option>Housecall Pro</option><option>ServiceTitan</option>
+              <option>Calendly</option><option>Acuity Scheduling</option><option>Google Calendar</option>
+              <option>Outlook Calendar</option><option>Jane App</option><option>Mindbody</option>
+              <option>SimplyBook.me</option><option>Square Appointments</option>
+              <option>Built into my job management software</option>
+              <option>Paper / manual scheduling only</option><option>Other — specify below</option>
+            </select>
+            <div class="conditional" id="sched_other_field">
+              <input type="text" id="sched_sw_other" placeholder="Specify your scheduling software">
+            </div>
+          </div>
+          <div class="two-col">
+            <div class="field-group">
+              <label class="field-label">When should confirmation send?</label>
+              <select id="confirm_timing">
+                <option value="">Select timing…</option>
+                <option>Immediately after booking</option>
+                <option>Within 15 minutes of booking</option>
+                <option>Within 1 hour of booking</option>
+                <option>No confirmation — reminder only</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">When should reminder send?</label>
+              <select id="remind_timing">
+                <option value="">Select timing…</option>
+                <option>48 hours before appointment</option>
+                <option>24 hours before appointment</option>
+                <option>Morning of appointment (8 AM)</option>
+                <option>2 hours before appointment</option>
+                <option>Both 24 hours and 2 hours before</option>
+                <option>Both 48 hours and 24 hours before</option>
+              </select>
+            </div>
+          </div>
+          <div class="two-col">
+            <div class="field-group">
+              <label class="field-label">Send reminders via</label>
+              <select id="remind_channel">
+                <option value="">Select…</option>
+                <option>Text message (SMS) only</option>
+                <option>Email only</option>
+                <option>Both text and email</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">If client doesn't confirm — what happens?</label>
+              <select id="no_confirm">
+                <option value="">Select…</option>
+                <option>Send a second reminder automatically</option>
+                <option>Flag in CRM for manual follow-up</option>
+                <option>Do nothing — assume confirmed</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">What should the confirmation message say?</label>
+            <span class="field-hint">Include business name, address (if applicable), contact number, what to expect</span>
+            <textarea id="confirm_msg" placeholder="e.g. Hi [Name], your HVAC appointment with Riverside HVAC is confirmed for [Date] at [Time]. We'll be at [Address]. Call (314) 555-0100 to reschedule.&#10;&#10;— or — Please draft for us."></textarea>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Any pre-appointment instructions to include?</label>
+            <span class="field-hint">Med Spa: pre-care, what to avoid. Contractor: parking, gate code, pets, access info.</span>
+            <textarea id="pre_appt" placeholder="e.g. Please ensure clear access to the HVAC unit. If you have pets, please secure them before our arrival.&#10;&#10;— or — Not applicable for my business type."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-sec" onclick="goTo(2)">← Back</button>
+        <span class="step-pill">Step 3 of 10</span>
+        <button class="btn btn-pri" onclick="goTo(4)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Google Reviews -->
+  <div class="step" id="step-4">
+    <div class="step-card">
+      <div class="step-hdr">
+        <div class="step-num">03</div>
+        <div class="step-hdr-text">
+          <div class="step-title">Google Review Requests</div>
+          <div class="step-desc">Automated review prompts sent at the perfect moment after each job.</div>
+          <span class="skip-badge">Skip if this automation is not in your plan</span>
+        </div>
+      </div>
+      <div class="step-body">
+        <div class="skip-section">
+          <label class="skip-toggle"><input type="checkbox" id="skip_review" onchange="toggleSkip('review')"><span class="skip-slider"></span></label>
+          <span class="skip-txt"><strong>Skip this section</strong> — Review Requests are not in my plan</span>
+        </div>
+        <div class="section-fields" id="fields_review">
+          <div class="callout tip"><span class="callout-ico">⭐</span><div class="callout-body"><strong>How to get your review link:</strong> Open Google Maps → search your business → click Share → Copy link. That's the URL to paste below.</div></div>
+          <div class="field-group">
+            <label class="field-label">Your Google Business Profile Review Link <span class="field-req">*</span></label>
+            <span class="field-hint">Paste the full URL — it starts with maps.app.goo.gl or google.com/maps</span>
+            <input type="url" id="review_link" placeholder="https://maps.app.goo.gl/yourlink">
+          </div>
+          <div class="two-col">
+            <div class="field-group">
+              <label class="field-label">When should review request send? <span class="field-req">*</span></label>
+              <select id="review_timing">
+                <option value="">Select timing…</option>
+                <option>Same day — within 2 hours of job completion</option>
+                <option>Same day — end of business day</option>
+                <option>Next morning (9 AM following day)</option>
+                <option>24 hours after job completion</option>
+                <option>48 hours after job completion</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Send via <span class="field-req">*</span></label>
+              <select id="review_channel">
+                <option value="">Select…</option>
+                <option>Text message (SMS) only</option>
+                <option>Email only</option>
+                <option>Both text and email</option>
+              </select>
+            </div>
+          </div>
+          <div class="two-col">
+            <div class="field-group">
+              <label class="field-label">What triggers the review request? <span class="field-req">*</span></label>
+              <select id="review_trigger">
+                <option value="">Select trigger…</option>
+                <option>Job marked complete in scheduling software</option>
+                <option>Invoice sent to client</option>
+                <option>Invoice paid by client</option>
+                <option>Manual trigger — we'll flag in CRM</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Send follow-up if no review?</label>
+              <select id="review_followup">
+                <option value="">Select…</option>
+                <option>Yes — follow up once after 3 days</option>
+                <option>Yes — follow up once after 5 days</option>
+                <option>Yes — follow up once after 7 days</option>
+                <option>No — send review request once only</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">What should the review request message say?</label>
+            <span class="field-hint">Keep it brief and personal. The review link will be included automatically.</span>
+            <textarea id="review_msg" placeholder="e.g. Hi [Name], it was great working with you today! If you have a moment, we'd really appreciate a Google review — it helps other homeowners find us. [Review Link] Thanks so much! — The Riverside Team&#10;&#10;— or — Please draft for us."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-sec" onclick="goTo(3)">← Back</button>
+        <span class="step-pill">Step 4 of 10</span>
+        <button class="btn btn-pri" onclick="goTo(5)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5: Invoice Automation -->
+  <div class="step" id="step-5">
+    <div class="step-card">
+      <div class="step-hdr">
+        <div class="step-num">04</div>
+        <div class="step-hdr-text">
+          <div class="step-title">Invoice Automation</div>
+          <div class="step-desc">Automatic invoice delivery and payment follow-up.</div>
+          <span class="skip-badge">Skip if this automation is not in your plan</span>
+        </div>
+      </div>
+      <div class="step-body">
+        <div class="skip-section">
+          <label class="skip-toggle"><input type="checkbox" id="skip_invoice" onchange="toggleSkip('invoice')"><span class="skip-slider"></span></label>
+          <span class="skip-txt"><strong>Skip this section</strong> — Invoice Automation is not in my plan</span>
+        </div>
+        <div class="section-fields" id="fields_invoice">
+          <div class="field-group">
+            <label class="field-label">What software do you use for invoicing? <span class="field-req">*</span></label>
+            <select id="invoice_sw">
+              <option value="">Select invoicing software…</option>
+              <option>Jobber</option><option>Housecall Pro</option><option>ServiceTitan</option>
+              <option>QuickBooks Online</option><option>QuickBooks Desktop</option>
+              <option>FreshBooks</option><option>Wave (free)</option><option>Xero</option>
+              <option>Square</option><option>Stripe</option><option>PayPal</option>
+              <option>Built into my job management software</option>
+              <option>Manual / spreadsheet</option><option>Other — specify below</option>
+            </select>
+            <div class="conditional" id="invoice_sw_other_field">
+              <input type="text" id="invoice_sw_other" placeholder="Specify invoicing software">
+            </div>
+          </div>
+          <div class="two-col">
+            <div class="field-group">
+              <label class="field-label">What triggers the invoice to send? <span class="field-req">*</span></label>
+              <select id="invoice_trigger">
+                <option value="">Select trigger…</option>
+                <option>Job marked complete in software</option>
+                <option>End of business day</option>
+                <option>Manual approval before sending</option>
+                <option>Appointment checkout / sign-off</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">How do clients pay?</label>
+              <select id="pay_method">
+                <option value="">Select…</option>
+                <option>Credit card — via payment link</option>
+                <option>Check</option><option>Cash</option><option>ACH / bank transfer</option>
+                <option>Multiple methods accepted</option>
+                <option>N/A — clients pay prior to service</option>
+              </select>
+            </div>
+          </div>
+          <div class="two-col">
+            <div class="field-group">
+              <label class="field-label">Payment due within</label>
+              <select id="pay_terms">
+                <option value="">Select…</option>
+                <option>Due on receipt</option><option>Net 7 days</option>
+                <option>Net 14 days</option><option>Net 30 days</option>
+                <option>N/A — paid upfront</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Follow up on unpaid invoices?</label>
+              <select id="unpaid_followup">
+                <option value="">Select…</option>
+                <option>Yes — reminder after 3 days unpaid</option>
+                <option>Yes — reminder after 7 days unpaid</option>
+                <option>Yes — reminder after 14 days unpaid</option>
+                <option>No follow-up needed</option>
+                <option>N/A — clients always pay upfront</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Anything specific to include in the invoice message?</label>
+            <span class="field-hint">Thank you note, payment instructions, early payment discount, etc.</span>
+            <textarea id="invoice_msg" placeholder="e.g. Thank you for choosing Riverside HVAC! Your invoice is attached. Pay securely online at the link below. Questions? Call (314) 555-0100."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-sec" onclick="goTo(4)">← Back</button>
+        <span class="step-pill">Step 5 of 10</span>
+        <button class="btn btn-pri" onclick="goTo(6)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 6: Quote Follow-Up -->
+  <div class="step" id="step-6">
+    <div class="step-card">
+      <div class="step-hdr">
+        <div class="step-num">05</div>
+        <div class="step-hdr-text">
+          <div class="step-title">Quote Follow-Up Sequence</div>
+          <div class="step-desc">Automated follow-up on quotes that never received a response.</div>
+          <span class="skip-badge">Skip if this automation is not in your plan</span>
+        </div>
+      </div>
+      <div class="step-body">
+        <div class="skip-section">
+          <label class="skip-toggle"><input type="checkbox" id="skip_quote" onchange="toggleSkip('quote')"><span class="skip-slider"></span></label>
+          <span class="skip-txt"><strong>Skip this section</strong> — Quote Follow-Up is not in my plan</span>
+        </div>
+        <div class="section-fields" id="fields_quote">
+          <div class="two-col">
+            <div class="field-group">
+              <label class="field-label">What software do you send quotes from? <span class="field-req">*</span></label>
+              <select id="quote_sw">
+                <option value="">Select…</option>
+                <option>Jobber</option><option>Housecall Pro</option><option>ServiceTitan</option>
+                <option>QuickBooks</option><option>Email (manual)</option>
+                <option>Other — specify below</option>
+              </select>
+              <div class="conditional" id="quote_sw_other_field">
+                <input type="text" id="quote_sw_other" placeholder="Specify quote software">
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">When does first follow-up send? <span class="field-req">*</span></label>
+              <select id="quote_timing">
+                <option value="">Select timing…</option>
+                <option>1 day after quote sent</option>
+                <option>2 days after quote sent</option>
+                <option>3 days after quote sent</option>
+                <option>5 days after quote sent</option>
+                <option>1 week after quote sent</option>
+              </select>
+            </div>
+          </div>
+          <div class="two-col">
+            <div class="field-group">
+              <label class="field-label">How many follow-up attempts total?</label>
+              <select id="quote_attempts">
+                <option value="">Select…</option>
+                <option>1 attempt then stop</option>
+                <option>2 attempts then stop</option>
+                <option>3 attempts then stop</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Stop sequence when</label>
+              <select id="quote_stop">
+                <option value="">Select…</option>
+                <option>Client responds to any message</option>
+                <option>Client accepts the quote</option>
+                <option>After all follow-up attempts</option>
+                <option>Quote expires / is voided</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">What should the follow-up message say?</label>
+            <span class="field-hint">Friendly, not pushy. Remind them the quote is available and offer to answer questions.</span>
+            <textarea id="quote_msg" placeholder="e.g. Hi [Name], just checking in — your quote from Riverside HVAC is still available if you have any questions or are ready to move forward. Happy to answer anything! Call (314) 555-0100 or just reply here.&#10;&#10;— or — Please draft for us."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-sec" onclick="goTo(5)">← Back</button>
+        <span class="step-pill">Step 6 of 10</span>
+        <button class="btn btn-pri" onclick="goTo(7)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 7: Re-Engagement -->
+  <div class="step" id="step-7">
+    <div class="step-card">
+      <div class="step-hdr">
+        <div class="step-num">06</div>
+        <div class="step-hdr-text">
+          <div class="step-title">Client Re-Engagement</div>
+          <div class="step-desc">Win-back campaigns for lapsed clients and seasonal promotions.</div>
+          <span class="skip-badge">Skip if this automation is not in your plan</span>
+        </div>
+      </div>
+      <div class="step-body">
+        <div class="skip-section">
+          <label class="skip-toggle"><input type="checkbox" id="skip_reengage" onchange="toggleSkip('reengage')"><span class="skip-slider"></span></label>
+          <span class="skip-txt"><strong>Skip this section</strong> — Re-Engagement is not in my plan</span>
+        </div>
+        <div class="section-fields" id="fields_reengage">
+          <div class="two-col">
+            <div class="field-group">
+              <label class="field-label">A client is "lapsed" after how long? <span class="field-req">*</span></label>
+              <select id="lapsed_window">
+                <option value="">Select…</option>
+                <option>3 months with no contact</option>
+                <option>6 months with no contact</option>
+                <option>9 months with no contact</option>
+                <option>1 year with no contact</option>
+                <option>2+ years with no contact</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Send re-engagement via</label>
+              <select id="reengage_channel">
+                <option value="">Select…</option>
+                <option>Text message (SMS) only</option>
+                <option>Email only</option>
+                <option>Both text and email</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">What offer or message should lapsed clients receive?</label>
+            <span class="field-hint">e.g. seasonal discount, simple check-in, service reminder</span>
+            <textarea id="reengage_msg" placeholder="e.g. Hi [Name], it's been a while since we've heard from you at Riverside HVAC! We're offering $25 off any service this month. Give us a call at (314) 555-0100 or reply to this message to book.&#10;&#10;— or — Please draft a friendly check-in for us."></textarea>
+          </div>
+          <div class="two-col">
+            <div class="field-group">
+              <label class="field-label">Do you run seasonal promotions?</label>
+              <select id="seasonal_yn">
+                <option value="">Select…</option>
+                <option>Yes — I run seasonal promotions</option>
+                <option>Not currently but would like to start</option>
+                <option>No seasonal promotions</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">When do you typically run them?</label>
+              <select id="promo_timing">
+                <option value="">Select…</option>
+                <option>Spring (March–April)</option>
+                <option>Summer (June–July)</option>
+                <option>Fall (September–October)</option>
+                <option>Winter / Holiday (November–December)</option>
+                <option>New Year (January)</option>
+                <option>Multiple seasons — specify below</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Describe seasonal campaigns you want automated</label>
+            <span class="field-hint">Be specific — who receives it, what the offer is, when it sends</span>
+            <textarea id="seasonal_detail" placeholder="e.g. Every March — send all past HVAC clients a spring tune-up reminder offering $25 off. Every October — send a winter prep promotion for furnace checks."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-sec" onclick="goTo(6)">← Back</button>
+        <span class="step-pill">Step 7 of 10</span>
+        <button class="btn btn-pri" onclick="goTo(8)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 8: Client Onboarding -->
+  <div class="step" id="step-8">
+    <div class="step-card">
+      <div class="step-hdr">
+        <div class="step-num">07</div>
+        <div class="step-hdr-text">
+          <div class="step-title">Client Onboarding</div>
+          <div class="step-desc">New client intake forms, consents, and welcome sequence.</div>
+          <span class="skip-badge">Skip if this automation is not in your plan</span>
+        </div>
+      </div>
+      <div class="step-body">
+        <div class="skip-section">
+          <label class="skip-toggle"><input type="checkbox" id="skip_onboard" onchange="toggleSkip('onboard')"><span class="skip-slider"></span></label>
+          <span class="skip-txt"><strong>Skip this section</strong> — Client Onboarding is not in my plan</span>
+        </div>
+        <div class="section-fields" id="fields_onboard">
+          <div class="field-group">
+            <label class="field-label">What must a new client complete before their first appointment?</label>
+            <span class="field-hint">Check all that apply</span>
+            <div class="cb-grid">
+              <label class="cb-item"><input type="checkbox" name="onboard_req" value="Intake / health form"><div class="cb-box"></div><span class="cb-label">Intake / health form</span></label>
+              <label class="cb-item"><input type="checkbox" name="onboard_req" value="Consent / liability waiver"><div class="cb-box"></div><span class="cb-label">Consent / liability waiver</span></label>
+              <label class="cb-item"><input type="checkbox" name="onboard_req" value="Pre-service instructions"><div class="cb-box"></div><span class="cb-label">Pre-service instructions</span></label>
+              <label class="cb-item"><input type="checkbox" name="onboard_req" value="Payment / deposit required"><div class="cb-box"></div><span class="cb-label">Payment / deposit required</span></label>
+              <label class="cb-item"><input type="checkbox" name="onboard_req" value="Contract or service agreement"><div class="cb-box"></div><span class="cb-label">Contract or service agreement</span></label>
+              <label class="cb-item"><input type="checkbox" name="onboard_req" value="ID verification"><div class="cb-box"></div><span class="cb-label">ID verification</span></label>
+              <label class="cb-item"><input type="checkbox" name="onboard_req" value="None — no onboarding required"><div class="cb-box"></div><span class="cb-label">None — no onboarding needed</span></label>
+              <label class="cb-item" id="onboard_other_cb"><input type="checkbox" name="onboard_req" value="Other"><div class="cb-box"></div><span class="cb-label">Other — specify below</span></label>
+            </div>
+            <div class="conditional" id="onboard_other_field">
+              <input type="text" id="onboard_other" placeholder="Specify other onboarding requirement">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Where are your intake forms hosted?</label>
+            <span class="field-hint">We'll link to them in the onboarding sequence</span>
+            <input type="url" id="intake_url" placeholder="https://forms.google.com/... or jotform link, etc.">
+          </div>
+          <div class="field-group">
+            <label class="field-label">What should the onboarding welcome message say?</label>
+            <span class="field-hint">Sent right after booking — include what to expect and any required forms</span>
+            <textarea id="onboard_msg" placeholder="e.g. Welcome to Riverside HVAC, [Name]! We're looking forward to your appointment on [Date]. Before your visit, please complete our quick intake form: [Link]. Questions? Call (314) 555-0100. See you soon!&#10;&#10;— or — Please draft a welcome message for us."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-sec" onclick="goTo(7)">← Back</button>
+        <span class="step-pill">Step 8 of 10</span>
+        <button class="btn btn-pri" onclick="goTo(9)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 9: Messaging Preferences -->
+  <div class="step" id="step-9">
+    <div class="step-card">
+      <div class="step-hdr">
+        <div class="step-num">08</div>
+        <div class="step-hdr-text">
+          <div class="step-title">Messaging Preferences</div>
+          <div class="step-desc">Tone, style, and legal opt-out settings for all automated messages.</div>
+        </div>
+      </div>
+      <div class="step-body">
+        <div class="field-group">
+          <label class="field-label">What tone should all automated messages use? <span class="field-req">*</span></label>
+          <div class="opt-grid">
+            <div class="opt-card" onclick="selectOpt(this,'msg_tone','Professional and formal')"><div class="opt-radio"></div><span class="opt-label">Professional and formal</span></div>
+            <div class="opt-card" onclick="selectOpt(this,'msg_tone','Friendly and conversational')"><div class="opt-radio"></div><span class="opt-label">Friendly and conversational</span></div>
+            <div class="opt-card" onclick="selectOpt(this,'msg_tone','Brief and to the point')"><div class="opt-radio"></div><span class="opt-label">Brief and to the point</span></div>
+            <div class="opt-card" onclick="selectOpt(this,'msg_tone','Warm and personal — like hearing from the owner directly')"><div class="opt-radio"></div><span class="opt-label">Warm and personal — like hearing from the owner directly</span></div>
+          </div>
+          <input type="hidden" id="msg_tone">
+        </div>
+        <div class="two-col">
+          <div class="field-group">
+            <label class="field-label">Business name as it should appear in messages <span class="field-req">*</span></label>
+            <span class="field-hint">Exactly as you want clients to see it</span>
+            <input type="text" id="msg_biz_name" placeholder="e.g. Riverside HVAC">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Sign-off name for messages <span class="field-req">*</span></label>
+            <span class="field-hint">How messages should close</span>
+            <input type="text" id="msg_signoff" placeholder="e.g. The Riverside Team — or — Mike at Riverside HVAC">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Opt-out line on SMS messages <span class="field-req">*</span></label>
+          <span class="field-hint">Legally required for marketing messages. Recommended for all automated texts.</span>
+          <div class="cb-grid cols-1">
+            <label class="cb-item"><input type="radio" name="optout" value="Yes — include on ALL automated texts"><div class="cb-box"></div><span class="cb-label">Yes — include "Reply STOP to unsubscribe" on all automated texts</span></label>
+            <label class="cb-item"><input type="radio" name="optout" value="Yes — on marketing texts only"><div class="cb-box"></div><span class="cb-label">Yes — on marketing and promotional texts only</span></label>
+            <label class="cb-item"><input type="radio" name="optout" value="No — appointment and service texts only"><div class="cb-box"></div><span class="cb-label">No — appointment and service texts only, opt-out not needed</span></label>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Current tools — confirm what you use</label>
+          <span class="field-hint">Check every tool currently in use. This helps us confirm integrations before we build.</span>
+          <div class="cb-grid">
+            <label class="cb-item"><input type="checkbox" name="tools_confirm" value="GoHighLevel (GHL)"><div class="cb-box"></div><span class="cb-label">GoHighLevel (GHL)</span></label>
+            <label class="cb-item"><input type="checkbox" name="tools_confirm" value="Jobber"><div class="cb-box"></div><span class="cb-label">Jobber</span></label>
+            <label class="cb-item"><input type="checkbox" name="tools_confirm" value="Housecall Pro"><div class="cb-box"></div><span class="cb-label">Housecall Pro</span></label>
+            <label class="cb-item"><input type="checkbox" name="tools_confirm" value="ServiceTitan"><div class="cb-box"></div><span class="cb-label">ServiceTitan</span></label>
+            <label class="cb-item"><input type="checkbox" name="tools_confirm" value="QuickBooks Online"><div class="cb-box"></div><span class="cb-label">QuickBooks Online</span></label>
+            <label class="cb-item"><input type="checkbox" name="tools_confirm" value="QuickBooks Desktop"><div class="cb-box"></div><span class="cb-label">QuickBooks Desktop</span></label>
+            <label class="cb-item"><input type="checkbox" name="tools_confirm" value="Google Workspace / Gmail"><div class="cb-box"></div><span class="cb-label">Google Workspace / Gmail</span></label>
+            <label class="cb-item"><input type="checkbox" name="tools_confirm" value="WordPress website"><div class="cb-box"></div><span class="cb-label">WordPress website</span></label>
+            <label class="cb-item"><input type="checkbox" name="tools_confirm" value="Stripe"><div class="cb-box"></div><span class="cb-label">Stripe</span></label>
+            <label class="cb-item"><input type="checkbox" name="tools_confirm" value="Square"><div class="cb-box"></div><span class="cb-label">Square</span></label>
+            <label class="cb-item"><input type="checkbox" name="tools_confirm" value="Jane App"><div class="cb-box"></div><span class="cb-label">Jane App</span></label>
+            <label class="cb-item"><input type="checkbox" name="tools_confirm" value="Mindbody"><div class="cb-box"></div><span class="cb-label">Mindbody</span></label>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Any additional tools not listed above?</label>
+          <input type="text" id="other_tools" placeholder="e.g. FieldEdge, Service Fusion, Acuity Scheduling">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Anything else we should know before building your system?</label>
+          <span class="field-hint">Specific requirements, things to avoid, preferences not covered above</span>
+          <textarea id="other_notes" placeholder="e.g. We close every Thursday. Don't send anything Sunday mornings. We use a franchise-required system that can't be changed."></textarea>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-sec" onclick="goTo(8)">← Back</button>
+        <span class="step-pill">Step 9 of 10</span>
+        <button class="btn btn-pri" onclick="goTo(10)">Review & Submit →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 10: Review & Submit -->
+  <div class="step" id="step-10">
+    <div class="step-card">
+      <div class="step-hdr">
+        <div class="step-num">★</div>
+        <div class="step-hdr-text">
+          <div class="step-title">Review & Submit</div>
+          <div class="step-desc">Check your answers before sending. Click any section header to go back and edit.</div>
+        </div>
+      </div>
+      <div class="step-body">
+        <div id="reviewContent"></div>
+        <div class="confirm-wrap" id="confirmWrap" onclick="toggleConfirm()">
+          <div class="confirm-box" id="confirmBox"></div>
+          <div class="confirm-txt">
+            <strong>I confirm that all information provided in this form is accurate and complete.</strong> I understand that my automation build will be configured based on these answers and that my go-live date depends on returning this form promptly.
+          </div>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-sec" onclick="goTo(9)">← Back</button>
+        <span class="step-pill">Step 10 of 10</span>
+        <button class="btn btn-submit" id="submitBtn" onclick="submitForm()" disabled>
+          📤 Submit Form →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success" id="successPage">
+    <div class="success-ico">✅</div>
+    <h2>Form Submitted!</h2>
+    <p>Your email client should have opened with a pre-filled message to <strong>hello@calvren.co</strong>. Please review it and click Send.</p>
+    <p style="font-size:.8rem;color:var(--t4)">If your email client didn't open, forward your answers manually to hello@calvren.co with subject: <strong>[Your Business Name] — Build Intake Form</strong></p>
+  </div>
+
+</div>
+
+<footer class="site-footer">
+  Calvren Automation · hello@calvren.co · calvren.com · American Military Family Owned & Operated
+</footer>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+let currentStep = 1;
+const TOTAL_STEPS = 10;
+let confirmed = false;
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+(function init(){
+  // Build step dots
+  const dots = document.getElementById('stepDots');
+  for(let i=1;i<=TOTAL_STEPS;i++){
+    const d = document.createElement('div');
+    d.className = 'step-dot' + (i===1?' active':'');
+    d.title = `Step ${i}`;
+    d.onclick = () => { if(i < currentStep) goTo(i); };
+    dots.appendChild(d);
+  }
+
+  // Checkbox click handlers
+  document.querySelectorAll('.cb-item').forEach(item => {
+    const inp = item.querySelector('input');
+    if(!inp) return;
+    item.addEventListener('click', e => {
+      if(e.target.tagName === 'INPUT') return;
+      if(inp.type === 'checkbox'){
+        inp.checked = !inp.checked;
+      } else if(inp.type === 'radio'){
+        document.querySelectorAll(`input[name="${inp.name}"]`).forEach(r => {
+          r.closest('.cb-item')?.classList.remove('checked');
+        });
+        inp.checked = true;
+      }
+      item.classList.toggle('checked', inp.checked);
+      checkConditionals();
+    });
+    inp.addEventListener('change', () => {
+      if(inp.type === 'radio'){
+        document.querySelectorAll(`input[name="${inp.name}"]`).forEach(r => {
+          r.closest('.cb-item')?.classList.remove('checked');
+        });
+      }
+      item.classList.toggle('checked', inp.checked);
+      checkConditionals();
+    });
+  });
+
+  // Conditional fields based on select changes
+  document.querySelectorAll('select').forEach(sel => {
+    sel.addEventListener('change', checkConditionals);
+  });
+
+  checkConditionals();
+})();
+
+function checkConditionals(){
+  // Blackout custom
+  const bCustom = document.querySelector('input[value="Custom hours"]:checked');
+  document.getElementById('blackout_custom_field').classList.toggle('show', !!bCustom);
+
+  // Lead other
+  const leadOther = document.querySelector('input[name="lead_src"][value="Other"]:checked');
+  document.getElementById('lead_other_field').classList.toggle('show', !!leadOther);
+
+  // Sched other
+  const schedSW = document.getElementById('sched_sw');
+  if(schedSW) document.getElementById('sched_other_field').classList.toggle('show', schedSW.value === 'Other — specify below');
+
+  // Invoice SW other
+  const invSW = document.getElementById('invoice_sw');
+  if(invSW) document.getElementById('invoice_sw_other_field').classList.toggle('show', invSW.value === 'Other — specify below');
+
+  // Quote SW other
+  const quoteSW = document.getElementById('quote_sw');
+  if(quoteSW) document.getElementById('quote_sw_other_field').classList.toggle('show', quoteSW.value === 'Other — specify below');
+
+  // Onboard other
+  const onOther = document.querySelector('input[name="onboard_req"][value="Other"]:checked');
+  document.getElementById('onboard_other_field').classList.toggle('show', !!onOther);
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────────
+function goTo(n){
+  document.getElementById(`step-${currentStep}`).classList.remove('active');
+  document.querySelectorAll('.step-dot')[currentStep-1].classList.remove('active');
+  document.querySelectorAll('.step-dot')[currentStep-1].classList.add('done');
+
+  currentStep = n;
+  document.getElementById(`step-${n}`).classList.add('active');
+  document.querySelectorAll('.step-dot')[n-1].classList.add('active');
+  document.querySelectorAll('.step-dot')[n-1].classList.remove('done');
+
+  // Update progress
+  const pct = Math.round((n / TOTAL_STEPS) * 100);
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progCounter').textContent = `Step ${n} of ${TOTAL_STEPS}`;
+
+  window.scrollTo({top: 0, behavior: 'smooth'});
+
+  if(n === TOTAL_STEPS) buildReview();
+}
+
+// ── SKIP TOGGLE ────────────────────────────────────────────────────────────
+function toggleSkip(section){
+  const cb = document.getElementById(`skip_${section}`);
+  const fields = document.getElementById(`fields_${section}`);
+  fields.classList.toggle('hidden', cb.checked);
+}
+
+// ── OPT CARDS (radio) ──────────────────────────────────────────────────────
+function selectOpt(el, fieldId, value){
+  el.closest('.opt-grid').querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById(fieldId).value = value;
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+function val(id){ const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function cbs(name){ return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(c=>c.value).join(', ') || '—'; }
+function isSkipped(section){ const cb = document.getElementById(`skip_${section}`); return cb && cb.checked; }
+
+// ── REVIEW BUILD ───────────────────────────────────────────────────────────
+function buildReview(){
+  const sections = [
+    { title:'00 · Business Information', items:[
+      ['Business Name', val('biz_name')],
+      ['Owner / Contact', val('owner_name')],
+      ['Phone', val('biz_phone')],
+      ['Email', val('biz_email')],
+      ['City, State', val('city_state')],
+      ['Time Zone', val('timezone')],
+      ['Address', val('biz_address') || '—'],
+      ['Blackout Hours', cbs('blackout')],
+    ], step:1},
+    { title:'01 · Lead Capture & Follow-Up', items: isSkipped('lead') ? [['Status','Skipped — not in plan']] : [
+      ['Lead Sources', cbs('lead_src')],
+      ['Form URL', val('form_url') || '—'],
+      ['Form Collects', cbs('form_fields')],
+      ['Response Speed', val('resp_timing')],
+      ['Response Channel', val('resp_channel')],
+      ['Initial Message', val('initial_msg') || '—'],
+      ['Follow-up Attempts', val('followup_count')],
+      ['Stop Sequence When', val('followup_stop')],
+    ], step:2},
+    { title:'02 · Appointment Reminders', items: isSkipped('appt') ? [['Status','Skipped — not in plan']] : [
+      ['Scheduling Software', val('sched_sw')],
+      ['Confirmation Timing', val('confirm_timing')],
+      ['Reminder Timing', val('remind_timing')],
+      ['Send Via', val('remind_channel')],
+      ['If No Confirm', val('no_confirm')],
+      ['Confirmation Message', val('confirm_msg') || '—'],
+      ['Pre-Appt Instructions', val('pre_appt') || '—'],
+    ], step:3},
+    { title:'03 · Google Review Requests', items: isSkipped('review') ? [['Status','Skipped — not in plan']] : [
+      ['Review Link', val('review_link') || '—'],
+      ['Send Timing', val('review_timing')],
+      ['Send Via', val('review_channel')],
+      ['Trigger', val('review_trigger')],
+      ['Follow-up', val('review_followup')],
+      ['Review Message', val('review_msg') || '—'],
+    ], step:4},
+    { title:'04 · Invoice Automation', items: isSkipped('invoice') ? [['Status','Skipped — not in plan']] : [
+      ['Invoicing Software', val('invoice_sw')],
+      ['Invoice Trigger', val('invoice_trigger')],
+      ['Payment Method', val('pay_method')],
+      ['Payment Terms', val('pay_terms')],
+      ['Unpaid Follow-up', val('unpaid_followup')],
+      ['Invoice Message', val('invoice_msg') || '—'],
+    ], step:5},
+    { title:'05 · Quote Follow-Up', items: isSkipped('quote') ? [['Status','Skipped — not in plan']] : [
+      ['Quote Software', val('quote_sw')],
+      ['First Follow-up', val('quote_timing')],
+      ['Attempts', val('quote_attempts')],
+      ['Stop When', val('quote_stop')],
+      ['Follow-up Message', val('quote_msg') || '—'],
+    ], step:6},
+    { title:'06 · Client Re-Engagement', items: isSkipped('reengage') ? [['Status','Skipped — not in plan']] : [
+      ['Lapsed After', val('lapsed_window')],
+      ['Send Via', val('reengage_channel')],
+      ['Re-engagement Message', val('reengage_msg') || '—'],
+      ['Seasonal Promos', val('seasonal_yn')],
+      ['Promo Timing', val('promo_timing')],
+      ['Seasonal Detail', val('seasonal_detail') || '—'],
+    ], step:7},
+    { title:'07 · Client Onboarding', items: isSkipped('onboard') ? [['Status','Skipped — not in plan']] : [
+      ['Onboarding Requirements', cbs('onboard_req')],
+      ['Intake Form URL', val('intake_url') || '—'],
+      ['Welcome Message', val('onboard_msg') || '—'],
+    ], step:8},
+    { title:'08 · Messaging Preferences', items:[
+      ['Message Tone', val('msg_tone') || '—'],
+      ['Business Name in Messages', val('msg_biz_name')],
+      ['Sign-off Name', val('msg_signoff')],
+      ['SMS Opt-out', cbs('optout')],
+      ['Tools Confirmed', cbs('tools_confirm')],
+      ['Other Tools', val('other_tools') || '—'],
+      ['Additional Notes', val('other_notes') || '—'],
+    ], step:9},
+  ];
+
+  const html = sections.map(sec => `
+    <div class="review-section">
+      <div class="review-sec-hdr">
+        <span class="review-sec-title">${sec.title}</span>
+        <button class="review-edit" onclick="goTo(${sec.step})">Edit</button>
+      </div>
+      <div class="review-items">
+        ${sec.items.map(([k,v]) => `
+          <div class="review-item">
+            <span class="review-key">${k}</span>
+            <span class="review-val ${!v||v==='—'?'review-empty':''}">${v||'—'}</span>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+
+  document.getElementById('reviewContent').innerHTML = html;
+}
+
+// ── CONFIRM ────────────────────────────────────────────────────────────────
+function toggleConfirm(){
+  confirmed = !confirmed;
+  document.getElementById('confirmWrap').classList.toggle('checked', confirmed);
+  document.getElementById('submitBtn').disabled = !confirmed;
+}
+
+// ── SUBMIT ─────────────────────────────────────────────────────────────────
+function submitForm(){
+  const biz = val('biz_name') || 'Client';
+
+  let body = `CALVREN AUTOMATION — BUILD INTAKE FORM\n`;
+  body += `Submitted by: ${biz} — ${val('owner_name')}\n`;
+  body += `Date: ${new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}\n`;
+  body += `${'═'.repeat(56)}\n\n`;
+
+  body += `00. BUSINESS INFORMATION\n${'-'.repeat(40)}\n`;
+  body += `Business Name:    ${val('biz_name')}\n`;
+  body += `Owner / Contact:  ${val('owner_name')}\n`;
+  body += `Phone:            ${val('biz_phone')}\n`;
+  body += `Email:            ${val('biz_email')}\n`;
+  body += `City, State:      ${val('city_state')}\n`;
+  body += `Time Zone:        ${val('timezone')}\n`;
+  body += `Address:          ${val('biz_address')||'Not provided'}\n`;
+  body += `Blackout Hours:   ${cbs('blackout')}\n`;
+  if(val('blackout_custom')) body += `Custom Blackout:  ${val('blackout_custom')}\n`;
+  body += `\n`;
+
+  const sections = [
+    { key:'lead', num:'01', title:'LEAD CAPTURE & FOLLOW-UP', fields:[
+      ['Lead Sources', cbs('lead_src')],
+      ['Other Lead Source', val('lead_src_other')],
+      ['Form URL', val('form_url')],
+      ['Form Collects', cbs('form_fields')],
+      ['Response Speed', val('resp_timing')],
+      ['Response Channel', val('resp_channel')],
+      ['Initial Message', val('initial_msg')],
+      ['Follow-up Attempts', val('followup_count')],
+      ['Stop Sequence When', val('followup_stop')],
+    ]},
+    { key:'appt', num:'02', title:'APPOINTMENT REMINDERS', fields:[
+      ['Scheduling Software', val('sched_sw')||(val('sched_sw_other')?'Other: '+val('sched_sw_other'):'')],
+      ['Confirmation Timing', val('confirm_timing')],
+      ['Reminder Timing', val('remind_timing')],
+      ['Send Via', val('remind_channel')],
+      ['If No Confirm', val('no_confirm')],
+      ['Confirmation Message', val('confirm_msg')],
+      ['Pre-Appt Instructions', val('pre_appt')],
+    ]},
+    { key:'review', num:'03', title:'GOOGLE REVIEW REQUESTS', fields:[
+      ['Review Link', val('review_link')],
+      ['Send Timing', val('review_timing')],
+      ['Send Via', val('review_channel')],
+      ['Trigger', val('review_trigger')],
+      ['Follow-up', val('review_followup')],
+      ['Review Message', val('review_msg')],
+    ]},
+    { key:'invoice', num:'04', title:'INVOICE AUTOMATION', fields:[
+      ['Software', val('invoice_sw')||(val('invoice_sw_other')?'Other: '+val('invoice_sw_other'):'')],
+      ['Invoice Trigger', val('invoice_trigger')],
+      ['Payment Method', val('pay_method')],
+      ['Payment Terms', val('pay_terms')],
+      ['Unpaid Follow-up', val('unpaid_followup')],
+      ['Invoice Message', val('invoice_msg')],
+    ]},
+    { key:'quote', num:'05', title:'QUOTE FOLLOW-UP', fields:[
+      ['Software', val('quote_sw')||(val('quote_sw_other')?'Other: '+val('quote_sw_other'):'')],
+      ['First Follow-up', val('quote_timing')],
+      ['Attempts', val('quote_attempts')],
+      ['Stop When', val('quote_stop')],
+      ['Follow-up Message', val('quote_msg')],
+    ]},
+    { key:'reengage', num:'06', title:'CLIENT RE-ENGAGEMENT', fields:[
+      ['Lapsed After', val('lapsed_window')],
+      ['Send Via', val('reengage_channel')],
+      ['Re-engagement Message', val('reengage_msg')],
+      ['Seasonal Promos', val('seasonal_yn')],
+      ['Promo Timing', val('promo_timing')],
+      ['Seasonal Detail', val('seasonal_detail')],
+    ]},
+    { key:'onboard', num:'07', title:'CLIENT ONBOARDING', fields:[
+      ['Requirements', cbs('onboard_req')],
+      ['Other Requirement', val('onboard_other')],
+      ['Intake Form URL', val('intake_url')],
+      ['Welcome Message', val('onboard_msg')],
+    ]},
+  ];
+
+  sections.forEach(sec => {
+    body += `${sec.num}. ${sec.title}\n${'-'.repeat(40)}\n`;
+    if(isSkipped(sec.key)){
+      body += `STATUS: Skipped — not in automation plan\n\n`;
+      return;
+    }
+    sec.fields.forEach(([k,v]) => { if(v) body += `${k.padEnd(22)}: ${v}\n`; });
+    body += `\n`;
+  });
+
+  body += `08. MESSAGING PREFERENCES\n${'-'.repeat(40)}\n`;
+  body += `Tone:             ${val('msg_tone')||'Not specified'}\n`;
+  body += `Biz Name in Msgs: ${val('msg_biz_name')}\n`;
+  body += `Sign-off Name:    ${val('msg_signoff')}\n`;
+  body += `SMS Opt-out:      ${cbs('optout')}\n`;
+  body += `Tools Confirmed:  ${cbs('tools_confirm')}\n`;
+  if(val('other_tools')) body += `Other Tools:      ${val('other_tools')}\n`;
+  if(val('other_notes')) body += `Additional Notes: ${val('other_notes')}\n`;
+  body += `\n`;
+  body += `${'═'.repeat(56)}\n`;
+  body += `Submitted via Calvren Automation Build Intake Form\n`;
+  body += `hello@calvren.co · calvren.com\n`;
+  body += `American Military Family Owned & Operated\n`;
+
+  const subject = encodeURIComponent(`${biz} — Build Intake Form`);
+  window.location.href = `mailto:hello@calvren.co?subject=${subject}&body=${encodeURIComponent(body)}`;
+
+  setTimeout(() => {
+    document.getElementById(`step-${currentStep}`).classList.remove('active');
+    document.getElementById('successPage').classList.add('show');
+    document.getElementById('progFill').style.width = '100%';
+    document.getElementById('progCounter').textContent = 'Complete ✓';
+  }, 800);
+}
+</script>
+</body>
+</html>
